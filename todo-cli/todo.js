@@ -60,7 +60,6 @@ const todoList = () => {
   };
 };
 
-module.exports = todoList;
 
 // ####################################### #
 // DO NOT CHANGE ANYTHING BELOW THIS LINE. #
