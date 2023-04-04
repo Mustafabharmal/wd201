@@ -1,27 +1,20 @@
-
-
 {
   "development": {
     "username": "postgres",
-    "password": "mustafa@1",
-    "database": "sass_todo_db_dev",
+    "password": "changeme",
+    "database": "wd-todo-dev",
     "host": "127.0.0.1",
-    "dialect": "postgres",
-    "logging": false
+    "dialect": "postgres"
   },
   "test": {
     "username": "postgres",
-    "password": "mustafa@1",
-    "database": "sass_todo_db_test",
+    "password": "changeme",
+    "database": "wd-todo-test",
     "host": "127.0.0.1",
-    "dialect": "postgres",
-    "logging": false
+    "dialect": "postgres"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "use_env_variable": "DATABASE_URL",
+    "dialect": "postgres"
   }
 }
