@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-vars */
-// sudo service postgresql start
-// NODE_ENV=test npx sequelize-cli db:drop && NODE_ENV=test npx sequelize-cli db:create && NODE_ENV=test npx sequelize-cli model:generate --name Todo --attributes title:string,dueDate:string,completed:boolean && NODE_ENV=test npx sequelize-cli db:migrate
 
 const { request, response } = require("express");
 const express = require("express");
@@ -9,10 +6,6 @@ const { Todo } = require("./models");
 const bodyParser = require("body-parser");
 const path = require("path");
 app.use(bodyParser.json());
-
-// app.METHOD(PATH, HANDLER)
-// or
-// app.METHOD(path, callback [, callback ...])
 
 app.set("view engine", "ejs");
 
@@ -32,7 +25,6 @@ app.get("/", async (request, response) => {
 });
 
 app.get("/todos", async (request, response) => {
-  // res.send("Hello World");
   console.log("Todo List");
   try {
     const todos = await Todo.getAllTodos();
@@ -45,11 +37,7 @@ app.get("/todos", async (request, response) => {
 
 app.post("/todos", async (request, response) => {
   console.log("Creating a Todo", request.body);
-  // Todo
   try {
-    // console.log("Title: " + request.body.title);
-    // console.log("Due Date: " + request.body.dueDate);
-    // return response.json("added");
     const todo = await Todo.addTodo({
       title: request.body.title,
       dueDate: request.body.dueDate,
@@ -61,8 +49,6 @@ app.post("/todos", async (request, response) => {
     return response.status(422).json(error);
   }
 });
-
-// PUT http://mytodoapp.com/todos/123/markAsCompleted
 app.put("/todos/:id/markAsCompleted", async (request, response) => {
   console.log("We have to update a todo with ID:", request.params.id);
   const todo = await Todo.findByPk(request.params.id);
