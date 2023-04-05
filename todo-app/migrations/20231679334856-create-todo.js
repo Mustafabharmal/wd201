@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       dueDate: {
-        type: Sequelize.DATEONLY,
+        type: Sequelize.STRING,
       },
       completed: {
         type: Sequelize.BOOLEAN,
