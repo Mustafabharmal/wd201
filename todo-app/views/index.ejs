@@ -86,15 +86,19 @@
           </div>
         </form>
         <h5>
-        <%- include('todos.ejs', {category: "Completed", id: "completed", todos:
+     <!--    <%- include('todos.ejs', {category: "Completed", id: "completed", todos:
         completed}) %>
-        <!--  -->
+         -->
         <%- include('todos.ejs', {category: "Overdue", id: "overdue", todos:
         overdue}) %>
+        </h5>
+        <h5>
         <!--  -->
         <%- include('todos.ejs', {category: "Due Today", id: "due-today", todos:
         dueToday}) %>
         <!--  -->
+        </h5>
+        <h5>
         <%- include('todos.ejs', {category: "Due Later", id: "due-later", todos:
         dueLater}) %>
         </h5>
