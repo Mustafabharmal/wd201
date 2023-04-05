@@ -1,97 +1,103 @@
 const request = require("supertest");
-
 const db = require("../models/index");
+const cheerio = require("cheerio");
+
 const app = require("../app");
-
 let server, agent;
+function extractCsrfToken(res) {
+  var $ = cheerio.load(res.text);
+  return $("[name=_csrf]").val();
+}
 
-describe("Todo Application", function () {
+describe("Todo Test Suite", () => {
   beforeAll(async () => {
     await db.sequelize.sync({ force: true });
-    server = app.listen(3000, () => {});
+    server = app.listen(4000, () => {});
     agent = request.agent(server);
   });
-
   afterAll(async () => {
-    try {
-      await db.sequelize.close();
-      await server.close();
-    } catch (error) {
-      console.log(error);
-    }
+    await db.sequelize.close();
+    server.close();
   });
 
-  test("Creates a todo and responds ", async () => {
+  test("Responds with json at /todos", async () => {
+    const res = await agent.get("/");
+    const csrfToken = extractCsrfToken(res);
     const response = await agent.post("/todos").send({
-      title: "Buy milk",
+      title: "Buy Milk",
       dueDate: new Date().toISOString(),
       completed: false,
+      _csrf: csrfToken,
     });
-    expect(response.statusCode).toBe(200);
-    expect(response.header["content-type"]).toBe(
-      "application/json; charset=utf-8"
-    );
-    const parsedResponse = JSON.parse(response.text);
-    expect(parsedResponse.id).toBeDefined();
+    expect(response.statusCode).toBe(302);
   });
 
-  test("Marks a todo with the given ID as complete", async () => {
-    const response = await agent.post("/todos").send({
-      title: "Buy milk",
-      dueDate: new Date().toISOString(),
-      completed: false,
-    });
-    const parsedResponse = JSON.parse(response.text);
-    const todoID = parsedResponse.id;
-
-    expect(parsedResponse.completed).toBe(false);
-
-    const markCompleteResponse = await agent
-      .put(`/todos/${todoID}/markASCompleted`)
-      .send();
-    const parsedUpdateResponse = JSON.parse(markCompleteResponse.text);
-    expect(parsedUpdateResponse.completed).toBe(true);
-  });
-
-  test("Fetches all todos the database ", async () => {
+  test("Updating a todo: Marking a todo as complete and then marking it incomplete", async () => {
+    let res = await agent.get("/");
+    let csrfToken = extractCsrfToken(res);
     await agent.post("/todos").send({
-      title: "Buy xbox",
+      title: "Listen to music",
       dueDate: new Date().toISOString(),
       completed: false,
+      _csrf: csrfToken,
     });
-    await agent.post("/todos").send({
-      title: "Buy ps3",
-      dueDate: new Date().toISOString(),
-      completed: false,
 
-    });
-    const response = await agent.get("/todos");
-    const parsedResponse = JSON.parse(response.text);
+    const groupedTodosResponse = await agent
+      .get("/")
+      .set("Accept", "application/json");
+    const parsedTodosResponse = JSON.parse(groupedTodosResponse.text);
+    const dueTodayCount = parsedTodosResponse.dueToday.length;
+    const latestDueTodayTodo = parsedTodosResponse.dueToday[dueTodayCount - 1];
 
-    expect(parsedResponse.length).toBe(4);
-    expect(parsedResponse[3]["title"]).toBe("Buy ps3");
+    res = await agent.get("/");
+    csrfToken = extractCsrfToken(res);
+
+    const markCompletedResponse = await agent
+      .put(`/todos/${latestDueTodayTodo.id}`)
+      .send({ _csrf: csrfToken, completed: true });
+    const parsedUpdatedResponse = JSON.parse(markCompletedResponse.text);
+    expect(parsedUpdatedResponse.completed).toBe(true);
+
+    // Again marking as incomplete
+    res = await agent.get("/");
+
+    csrfToken = extractCsrfToken(res);
+    const markIncompleteResponse = await agent
+      .put(`/todos/${parsedUpdatedResponse.id}`)
+      .send({
+        _csrf: csrfToken,
+        completed: false,
+      });
+
+    const parsedIncompleteResponse = JSON.parse(markIncompleteResponse.text);
+    expect(parsedIncompleteResponse.completed).toBe(false);
   });
 
-  test("Deletes a todo with the given ID ", async () => {
-    // FILL IN YOUR CODE HERE
-    const response = await agent.post("/todos").send({
-      title: "Buy cycle",
+  test("Deleting a Todo", async () => {
+    let res = await agent.get("/");
+    let csrfToken = extractCsrfToken(res);
+
+    await agent.post("/todos").send({
+      title: "Go Green",
       dueDate: new Date().toISOString(),
       completed: false,
+      _csrf: csrfToken,
     });
-    const parsedResponse = JSON.parse(response.text);
-    const TodolistID = parsedResponse.id;
 
-    const deleteTodoResponses = await agent.delete(`/todos/${TodolistID}`).send();
-    const parsedDelResp = JSON.parse(deleteTodoResponses.text);
-    expect(parsedDelResp).toBe(true);
+    const groupedTodosResponse = await agent
+      .get("/")
+      .set("Accept", "application/json");
+    const parsedTodosResponse = JSON.parse(groupedTodosResponse.text);
+    const dueTodayCount = parsedTodosResponse.dueToday.length;
+    const latestDueTodayTodo = parsedTodosResponse.dueToday[dueTodayCount - 1];
+    res = await agent.get("/");
+    csrfToken = extractCsrfToken(res);
 
-    const deleteNonExistentTodoResponses = await agent
-      .delete(`/todos/9999`)
-      .send();
-    const parsedDeleteTodoResponses = JSON.parse(
-      deleteNonExistentTodoResponses.text
-    );
-    expect(parsedDeleteTodoResponses).toBe(false);
+    const deletedResponse = await agent
+      .delete(`/todos/${latestDueTodayTodo.id}`)
+      .send({ _csrf: csrfToken });
+    const parsedDeleteReponse = JSON.parse(deletedResponse.text);
+
+    expect(parsedDeleteReponse).toBe(true);
   });
 });
