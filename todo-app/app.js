@@ -1,98 +1,87 @@
 /* eslint-disable no-unused-vars */
-const express = require("express");
-const db = require("./models/index");
-const app = express();
-var bodyParser = require("body-parser");
-const path = require("path");
-var csurf = require("tiny-csrf");
-var cookieParser = require("cookie-parser");
+// sudo service postgresql start
+// NODE_ENV=test npx sequelize-cli db:drop && NODE_ENV=test npx sequelize-cli db:create && NODE_ENV=test npx sequelize-cli model:generate --name Todo --attributes title:string,dueDate:string,completed:boolean && NODE_ENV=test npx sequelize-cli db:migrate
 
+const { request, response } = require("express");
+const express = require("express");
+const app = express();
+const { Todo } = require("./models");
+const bodyParser = require("body-parser");
+const path = require("path");
 app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: false }));
+
+// app.METHOD(PATH, HANDLER)
+// or
+// app.METHOD(path, callback [, callback ...])
+
 app.set("view engine", "ejs");
-// eslint-disable-next-line no-undef
-app.use(express.static(path.join(__dirname, "/public")));
-app.use(cookieParser("ssh! some secret string"));
-app.use(csurf("123456789iamasecret987654321look", ["POST", "PUT", "DELETE"]));
+
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", async (request, response) => {
-  const allTodos = await db.Todos.getTodos();
-  const completed = allTodos.filter((todo) => todo.completed === true);
-  const overdue = allTodos.filter(
-    (todo) =>
-      todo.completed === false &&
-      todo.dueDate < new Date().toISOString().slice(0, 10)
-  );
-  const dueToday = allTodos.filter(
-    (todo) =>
-      todo.completed === false &&
-      todo.dueDate === new Date().toISOString().slice(0, 10)
-  );
-  const dueLater = allTodos.filter(
-    (todo) =>
-      todo.completed === false &&
-      todo.dueDate > new Date().toISOString().slice(0, 10)
-  );
+  const allTodos = await Todo.getAllTodos();
   if (request.accepts("html")) {
-    return response.render("index", {
-      completed,
-      overdue,
-      dueToday,
-      dueLater,
-      csrfToken: request.csrfToken(),
+    response.render("index", {
+      allTodos,
     });
   } else {
-    return response.json({ completed, overdue, dueToday, dueLater });
+    response.json({
+      allTodos,
+    });
   }
 });
 
 app.get("/todos", async (request, response) => {
+  // res.send("Hello World");
   console.log("Todo List");
-  const todoItems = await db.Todos.getTodos();
-  response.json(todoItems);
+  try {
+    const todos = await Todo.getAllTodos();
+    return response.json(todos);
+  } catch (err) {
+    console.error(err);
+    return response.status(422).json(err);
+  }
 });
 
 app.post("/todos", async (request, response) => {
-  console.log("Creating a new Todo ...");
+  console.log("Creating a Todo", request.body);
+  // Todo
   try {
-    await db.Todos.addTodo({
+    // console.log("Title: " + request.body.title);
+    // console.log("Due Date: " + request.body.dueDate);
+    // return response.json("added");
+    const todo = await Todo.addTodo({
       title: request.body.title,
       dueDate: request.body.dueDate,
+      completed: false,
     });
-    return response.redirect("/");
+    return response.json(todo);
   } catch (error) {
     console.log(error);
     return response.status(422).json(error);
   }
 });
 
-app.put("/todos/:id", async (request, response) => {
-  console.log("Updating Todo with ID: ", request.params.id);
-  const todo = await db.Todos.findByPk(request.params.id);
-
+// PUT http://mytodoapp.com/todos/123/markAsCompleted
+app.put("/todos/:id/markAsCompleted", async (request, response) => {
+  console.log("We have to update a todo with ID:", request.params.id);
+  const todo = await Todo.findByPk(request.params.id);
   try {
-    const updatedTodo = await todo.setCompletionStatus(request.body.completed);
-    if (request.accepts("html")) return response.json(updatedTodo);
-    else return response.redirect("/");
+    const updatedTodo = await todo.markAsCompleted();
+    return response.json(updatedTodo);
   } catch (error) {
     console.log(error);
-    return response.status(422).json(error);
   }
 });
 
 app.delete("/todos/:id", async (request, response) => {
-  console.log("Deleting todo with ID: ", request.params.id);
+  console.log("Delete a todo by ID:", request.params.id);
   try {
-    const todo = await db.Todos.findByPk(request.params.id);
-    if (todo) {
-      await db.Todos.remove(request.params.id);
-      return response.json(true);
-    } else {
-      return response.json(false);
-    }
-  } catch (error) {
-    console.log(error);
-    return response.status(422).json(false);
+    const deletedTodo = await Todo.deleteTodo(request.params.id);
+    return response.json(deletedTodo);
+  } catch (err) {
+    console.error(err);
+    return response.status(422).json(err);
   }
 });
 
