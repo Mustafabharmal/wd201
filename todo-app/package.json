@@ -16,7 +16,7 @@
       "prettier --write ."
     ]
   },
-  "author": "Meet Butani <meet.butani2702@gmail.com>",
+  "author": "Mustafa Bharmal<mustafa.bharmal178@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "ejs": "^3.1.9",
