@@ -86,12 +86,9 @@
           </div>
         </form>
         <h5>
-     <!--    <%- include('todos.ejs', {category: "Completed", id: "completed", todos:
-        completed}) %>
-         -->
-        <%- include('todos.ejs', {category: "Overdue", id: "overdue", todos:
-        overdue}) %>
-        </h5>
+  <% include('todos.ejs', { category: "Overdue", id: "overdue", todos: overdue }) %>
+</h5>
+
         <h5>
         <!--  -->
         <%- include('todos.ejs', {category: "Due Today", id: "due-today", todos:
