@@ -16,7 +16,7 @@
       "prettier --write ."
     ]
   },
-  "author": "Ayush Vijayant <ayush.vijayant@gmail.com>",
+  "author": "Mustafa Bharmal <mustafa.bharmal178@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",
