@@ -17,7 +17,7 @@
     ]
   },
   "keywords": [],
-  "author": "vivekramakrishnakona",
+  "author": "Mustafa Bharmal<mustafa.bharmal178@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
